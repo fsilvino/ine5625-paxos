@@ -31,6 +31,12 @@ public class ProposerImpl implements Proposer {
 		}
 	}
 	
+	@Override
+	public void prepare_response(int n, int v) throws RemoteException {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	public static void main(String[] args) {
 		Utils.initSecurityManager();
 		try {
@@ -41,6 +47,6 @@ public class ProposerImpl implements Proposer {
 			System.err.println("Proposer exception:");
 			e.printStackTrace();
 		}
-	}	
+	}
 
 }
