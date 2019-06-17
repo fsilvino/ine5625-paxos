@@ -33,14 +33,14 @@ public class ProposerImpl implements Proposer {
 	
 	public static void main(String[] args) {
 		Utils.initSecurityManager();
-        try {
-        	Proposer proposer = new ProposerImpl();
-        	Utils.bindObject(proposer, Constants.PROPOSER_NAME);
-        	System.out.println("Proposer bound");
-        } catch (Exception e) {
-            System.err.println("Proposer exception:");
-            e.printStackTrace();
-        }
+		try {
+			Proposer proposer = new ProposerImpl();
+			Utils.bindObject(proposer, Constants.PROPOSER_NAME);
+			System.out.println("Proposer bound");
+		} catch (Exception e) {
+			System.err.println("Proposer exception:");
+			e.printStackTrace();
+		}
 	}	
 
 }

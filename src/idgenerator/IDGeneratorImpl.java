@@ -22,13 +22,13 @@ public class IDGeneratorImpl implements IDGenerator {
 	public static void main(String[] args) {
 		Utils.initSecurityManager();
 		try {
-            IDGenerator generator = new IDGeneratorImpl();
-            Utils.bindObject(generator, Constants.IDGENERATOR_NAME);
-            System.out.println("IDGenerator bound");
-        } catch (Exception e) {
-            System.err.println("IDGenerator exception:");
-            e.printStackTrace();
-        }
+			IDGenerator generator = new IDGeneratorImpl();
+			Utils.bindObject(generator, Constants.IDGENERATOR_NAME);
+			System.out.println("IDGenerator bound");
+		} catch (Exception e) {
+			System.err.println("IDGenerator exception:");
+			e.printStackTrace();
+		}
 	}
 
 }
