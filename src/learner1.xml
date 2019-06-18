@@ -1,0 +1,7 @@
+<config>
+	<learnerName>Learner1</learnerName>
+	<proposers>
+		<proposer>Proposer1</proposer>
+		<proposer>Proposer2</proposer>
+	</proposers>
+</config>

@@ -1,0 +1,6 @@
+<config>
+	<acceptorName>Acceptor1</acceptorName>
+	<learners>
+		<learner>Learner1</learner>
+	</learners>
+</config>

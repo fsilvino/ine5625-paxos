@@ -1,18 +1,25 @@
 package proposer;
 
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
-import common.Constants;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+
 import common.Utils;
 import acceptor.Acceptor;
 
 public class ProposerImpl implements Proposer {
 	
-	private ArrayList<Acceptor> acceptors;
+	private ArrayList<String> acceptors;
 	
-	public ProposerImpl() {
+	public ProposerImpl(Document configFile) {
 		acceptors = new ArrayList<>();
+		NodeList acceptorsNodeList = configFile.getElementsByTagName("acceptor");
+		for (int i = 0; i < acceptorsNodeList.getLength(); i++) {
+			acceptors.add(acceptorsNodeList.item(i).getTextContent());
+		}
 	}
 
 	@Override
@@ -26,8 +33,17 @@ public class ProposerImpl implements Proposer {
 			throw new RemoteException("Could not generate the proposal number", e);
 		}
 		
-		for	(Acceptor acceptor: acceptors) {
-			acceptor.prepare_request(n, v);
+		for	(String acceptorName: acceptors) {
+			getAcceptor(acceptorName).prepare_request(n, v);
+		}
+	}
+	
+	private Acceptor getAcceptor(String acceptorName) throws RemoteException {
+		try {
+			return (Acceptor) Utils.getRemoteObject(acceptorName);
+		} catch (NotBoundException e) {
+			e.printStackTrace();
+			throw new RemoteException("Could not find the acceptor.", e);
 		}
 	}
 	
@@ -39,12 +55,15 @@ public class ProposerImpl implements Proposer {
 	
 	public static void main(String[] args) {
 		Utils.initSecurityManager();
+		String proposerName = "Proposer";
 		try {
-			Proposer proposer = new ProposerImpl();
-			Utils.bindObject(proposer, Constants.PROPOSER_NAME);
-			System.out.println("Proposer bound");
+			Document docConfigFile = Utils.readConfiguration(args);
+			Proposer proposer = new ProposerImpl(docConfigFile);
+			proposerName = docConfigFile.getElementsByTagName("proposerName").item(0).getTextContent();
+			Utils.bindObject(proposer, proposerName);
+			System.out.println(proposerName + " bound");
 		} catch (Exception e) {
-			System.err.println("Proposer exception:");
+			System.err.println(proposerName + " exception:");
 			e.printStackTrace();
 		}
 	}

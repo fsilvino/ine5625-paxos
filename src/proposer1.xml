@@ -1,0 +1,11 @@
+<config>
+	<proposerName>Proposer1</proposerName>
+	<acceptors>
+		<acceptor>Acceptor1</acceptor>
+		<acceptor>Acceptor2</acceptor>
+		<acceptor>Acceptor3</acceptor>
+	</acceptors>
+	<learners>
+		<learner>Learner1</learner>
+	</learners>
+</config>
