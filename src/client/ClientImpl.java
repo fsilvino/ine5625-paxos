@@ -1,0 +1,73 @@
+package client;
+
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.util.Random;
+
+import org.w3c.dom.Document;
+
+import common.Utils;
+import proposer.Proposer;
+
+public class ClientImpl implements Client {
+
+	private String clientName;
+	private String proposerName;
+	private int timeToSleep;
+	
+	public ClientImpl(String clientName, Document configFile) {
+		this.clientName = clientName;
+		
+		this.proposerName = configFile.getElementsByTagName("proposerName").item(0).getTextContent();
+		this.timeToSleep = Integer.parseInt(configFile.getElementsByTagName("timeToSleep").item(0).getTextContent());
+		
+		new Thread() {
+			@Override
+		    public void run() {
+				try {
+					Thread.sleep(timeToSleep);
+					sendRequestToProposer();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+		    }
+		}.start();
+	}
+	
+	private void sendRequestToProposer() {
+		Random rnd = new Random(this.timeToSleep);
+		int v = rnd.nextInt(1000);
+		try {
+			System.out.println(String.format("Sending value %d to proposer %s", v, this.proposerName));
+			Proposer proposer = (Proposer) Utils.getRemoteObject(this.proposerName);
+			proposer.request(this.clientName, v);
+		} catch (RemoteException | NotBoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void receive_result(int v) throws RemoteException {
+		System.out.println(String.format("Received value: %s", v));
+	}
+
+	public static void main(String[] args) {
+		
+		Utils.initSecurityManager();
+		String clientName = "Client";
+		try {
+			Document docConfigFile = Utils.readConfiguration(args);
+			clientName = docConfigFile.getElementsByTagName("clientName").item(0).getTextContent();
+			
+			Client client = new ClientImpl(clientName, docConfigFile);
+			Utils.bindObject(client, clientName);
+			
+			System.out.println(clientName + " bound");
+		} catch (Exception e) {
+			System.err.println(clientName + " exception:");
+			e.printStackTrace();
+		}
+		
+	}
+
+}

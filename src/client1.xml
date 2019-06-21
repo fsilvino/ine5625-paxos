@@ -1,0 +1,5 @@
+<config>
+	<clientName>Client1</clientName>
+	<proposerName>Proposer1</proposerName>
+	<timeToSleep>1000</timeToSleep>
+</config>

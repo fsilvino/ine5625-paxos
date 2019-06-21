@@ -1,7 +1,9 @@
 package learner;
 
+import common.AcceptedProposal;
+
 public interface Learner extends java.rmi.Remote {
 
-	void accepted(int v) throws java.rmi.RemoteException;
+	void accepted(AcceptedProposal acceptedProposal) throws java.rmi.RemoteException;
 	
 }

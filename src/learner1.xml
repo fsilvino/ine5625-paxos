@@ -4,4 +4,9 @@
 		<proposer>Proposer1</proposer>
 		<proposer>Proposer2</proposer>
 	</proposers>
+	<acceptors>
+		<acceptor>Acceptor1</acceptor>
+		<acceptor>Acceptor2</acceptor>
+		<acceptor>Acceptor3</acceptor>
+	</acceptors>
 </config>

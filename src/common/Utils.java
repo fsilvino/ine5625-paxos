@@ -6,11 +6,13 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import idgenerator.IDGenerator;
 
@@ -58,6 +60,13 @@ public class Utils {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
 		return builder.parse(configFile);
+    }
+    
+    public static void readProcessList(Document configFile, String tagName, ArrayList<String> processList) {
+    	NodeList nodeList = configFile.getElementsByTagName(tagName);
+		for (int i = 0; i < nodeList.getLength(); i++) {
+			processList.add(nodeList.item(i).getTextContent());
+		}
     }
 
 }
