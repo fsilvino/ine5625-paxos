@@ -35,8 +35,8 @@ public class ClientImpl implements Client {
 	}
 	
 	private void sendRequestToProposer() {
-		Random rnd = new Random(this.timeToSleep);
-		int v = rnd.nextInt(1000);
+		Random rnd = new Random();
+		int v = rnd.nextInt(10000);
 		try {
 			Utils.printFormat("Sending value %d to proposer %s", v, this.proposerName);
 			Proposer proposer = (Proposer) Utils.getRemoteObject(this.proposerName);
