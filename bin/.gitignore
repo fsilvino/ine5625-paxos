@@ -4,8 +4,12 @@
 /acceptor3.xml
 /client.policy
 /client/
+/client1.xml
+/client2.xml
 /common/
 /compileAcceptor.bat
+/compileAll.bat
+/compileClient.bat
 /compileIDGenerator.bat
 /compileLearner.bat
 /compileProposer.bat
@@ -19,6 +23,9 @@
 /runAcceptor1.bat
 /runAcceptor2.bat
 /runAcceptor3.bat
+/runClient1.bat
+/runClient2.bat
+/runClients.bat
 /runIDGenerator.bat
 /runLearner1.bat
 /runProposer1.bat

@@ -6,7 +6,10 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -68,5 +71,14 @@ public class Utils {
 			processList.add(nodeList.item(i).getTextContent());
 		}
     }
+
+	public static void printFormat(String format, Object... args) {
+		print(String.format(format, args));
+	}
+	
+	public static void print(String msg) {
+		SimpleDateFormat simple = new SimpleDateFormat("HH:mm:ss:SSS");
+		System.out.println(String.format("%s %s", simple.format(new Date()), msg));
+	}
 
 }

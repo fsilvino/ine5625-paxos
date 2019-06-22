@@ -38,7 +38,7 @@ public class ClientImpl implements Client {
 		Random rnd = new Random(this.timeToSleep);
 		int v = rnd.nextInt(1000);
 		try {
-			System.out.println(String.format("Sending value %d to proposer %s", v, this.proposerName));
+			Utils.printFormat("Sending value %d to proposer %s", v, this.proposerName);
 			Proposer proposer = (Proposer) Utils.getRemoteObject(this.proposerName);
 			proposer.request(this.clientName, v);
 		} catch (RemoteException | NotBoundException e) {
@@ -47,8 +47,8 @@ public class ClientImpl implements Client {
 	}
 
 	@Override
-	public void receive_result(int v) throws RemoteException {
-		System.out.println(String.format("Received value: %s", v));
+	public void receive_result(String proposerName, int v) throws RemoteException {
+		Utils.printFormat("Received value: %d from proposer: %s", v, proposerName);
 	}
 
 	public static void main(String[] args) {
@@ -62,9 +62,9 @@ public class ClientImpl implements Client {
 			Client client = new ClientImpl(clientName, docConfigFile);
 			Utils.bindObject(client, clientName);
 			
-			System.out.println(clientName + " bound");
+			Utils.print(clientName + " bound");
 		} catch (Exception e) {
-			System.err.println(clientName + " exception:");
+			Utils.print(clientName + " exception:");
 			e.printStackTrace();
 		}
 		

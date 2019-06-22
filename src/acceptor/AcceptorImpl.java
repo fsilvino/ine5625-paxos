@@ -32,7 +32,7 @@ public class AcceptorImpl implements Acceptor {
 	public void prepare_request(Proposal proposal) throws RemoteException {
 		if (proposal.getProposalNumber() > this.currentProposalNumber) {
 			
-			System.out.println("Received prepare_request with major number.");
+			Utils.print("Received prepare_request with major number.");
 			
 			Response response = new Response(this.acceptorName, proposal.getProposalNumber(), this.currentProposalNumber, this.currentValue);
 			this.respondToProposer(proposal.getProposerName(), response);
@@ -43,20 +43,33 @@ public class AcceptorImpl implements Acceptor {
 			
 			this.currentProposalNumber = proposal.getProposalNumber();
 		} else {
-			System.out.println("Ignoring prepare_request from a proposal with minor number.");
+			Utils.print("Ignoring prepare_request from a proposal with minor number.");
 		}
 	}
 	
-	private void respondToProposer(String proposerName, Response response) throws RemoteException {
+	private void respondToProposer(String proposerName, Response response) {
 		
-		if (response.getResponseProposalNumber() == Integer.MIN_VALUE) {
-			System.out.println("Responding to the proposer with [no previous]...");
-		} else {
-			System.out.println("Responding to the proposer with previous proposal that has received first...");
-		}
-		
-		Proposer proposer = getProposer(proposerName);
-		proposer.prepare_response(response);
+		new Thread() {
+			
+			@Override
+		    public void run() {
+				
+				if (response.getResponseProposalNumber() == Integer.MIN_VALUE) {
+					Utils.print("Responding to the proposer with [no previous]...");
+				} else {
+					Utils.print("Responding to the proposer with previous proposal that has received first...");
+				}
+				
+				try {
+					Proposer proposer = getProposer(proposerName);
+					proposer.prepare_response(response);
+				} catch (RemoteException e) {
+					System.err.println("Failed to respond to the proposer!");
+					e.printStackTrace();
+				}
+				
+			}
+		}.start();
 	}
 	
 	// Método para facilitar a obtenção do objeto remoto proposer pelo nome
@@ -82,18 +95,39 @@ public class AcceptorImpl implements Acceptor {
 	@Override
 	public void accept_request(Proposal proposal) throws RemoteException {
 		if (proposal.getProposalNumber() >= this.currentProposalNumber) {
-			
-			System.out.println("Received accept_request with a major number. Forwarding to the learners...");
-			
-			AcceptedProposal acceptedProposal = new AcceptedProposal(this.acceptorName, proposal.getProposalNumber(), proposal.getValue());
-			for (String learnerName: this.learners) {
-				System.out.println(String.format("Sending accept to the learner: %s...", learnerName));
-				Learner learner = this.getLearner(learnerName);
-				learner.accepted(acceptedProposal);
-			}
+			Utils.print("Received accept_request with a major number.");
+			forwardAcceptToLearners(proposal);
 		} else {
-			System.out.println("Ignoring accept_request from a proposal with minor number.");
+			Utils.print("Ignoring accept_request from a proposal with minor number.");
 		}
+	}
+
+	private void forwardAcceptToLearners(Proposal proposal) throws RemoteException {
+		
+		new Thread() {
+			
+			@Override
+		    public void run() {
+				
+				Utils.print(" Forwarding to the learners...");
+				
+				AcceptedProposal acceptedProposal = new AcceptedProposal(acceptorName, proposal.getProposalNumber(), proposal.getValue());
+				
+				try {
+					for (String learnerName: learners) {
+						Utils.print(String.format("Sending accept to the learner: %s...", learnerName));
+						Learner learner = getLearner(learnerName);
+						learner.accepted(acceptedProposal);
+					}
+				} catch (RemoteException e) {
+					Utils.print("Failed to forward accept to the learners!");
+					e.printStackTrace();
+				}
+				
+			}
+			
+		}.start();
+		
 	}
 	
 	public static void main(String[] args) {
@@ -106,9 +140,9 @@ public class AcceptorImpl implements Acceptor {
 			Acceptor acceptor = new AcceptorImpl(acceptorName, docConfigFile);
 			Utils.bindObject(acceptor, acceptorName);
 			
-			System.out.println(acceptorName + " bound");
+			Utils.print(acceptorName + " bound");
 		} catch (Exception e) {
-			System.err.println(acceptorName + " exception:");
+			Utils.print(acceptorName + " exception:");
 			e.printStackTrace();
 		}
 	}

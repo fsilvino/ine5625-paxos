@@ -15,7 +15,7 @@ public class IDGeneratorImpl implements IDGenerator {
 	@Override
 	public synchronized int proposal_number() throws RemoteException {
 		int n = ++this.currentId; 
-		System.out.println("Proposal number served: " + n);
+		Utils.print("Proposal number served: " + n);
 		return n;
 	}
 
@@ -24,9 +24,9 @@ public class IDGeneratorImpl implements IDGenerator {
 		try {
 			IDGenerator generator = new IDGeneratorImpl();
 			Utils.bindObject(generator, Constants.IDGENERATOR_NAME);
-			System.out.println("IDGenerator bound");
+			Utils.print("IDGenerator bound");
 		} catch (Exception e) {
-			System.err.println("IDGenerator exception:");
+			Utils.print("IDGenerator exception:");
 			e.printStackTrace();
 		}
 	}

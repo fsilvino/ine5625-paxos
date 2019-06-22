@@ -46,19 +46,34 @@ public class ProposerImpl implements Proposer {
 		this.clientName = clientName;
 		this.proposal = new Proposal(this.proposerName, n, v);
 		
-		System.out.println("-----------------------------------------------------------------");
-		System.out.println(String.format("Receiving request from client: %s", this.clientName));
-		System.out.println(String.format("Proposal number: %d", n));
-		System.out.println(String.format("Value: %d", v));
-		System.out.println("-----------------------------------------------------------------");
+		Utils.printFormat("Receiving request from client: %s", this.clientName);
+		Utils.printFormat("Proposal number: %d", n);
+		Utils.printFormat("Value: %d", v);
 		
-		for	(String acceptorName: acceptors) {
-			System.out.println(String.format("Sending to the acceptor: %s...", acceptorName));
-			Acceptor acceptor = this.getAcceptor(acceptorName);
-			acceptor.prepare_request(this.proposal);
-		}
+		sendPrepareRequestToAcceptors();
+	}
+
+	private void sendPrepareRequestToAcceptors() {
 		
-		System.out.println("-----------------------------------------------------------------");
+		new Thread() {
+			
+			@Override
+		    public void run() {
+				try {
+					
+					for	(String acceptorName: acceptors) {
+						Utils.printFormat("Sending to the acceptor: %s...", acceptorName);
+						Acceptor acceptor = getAcceptor(acceptorName);
+						acceptor.prepare_request(proposal);
+					}
+			
+				} catch (Exception e) {
+					Utils.print("Failed to send prepare_request to the acceptors!");
+					e.printStackTrace();
+				}
+			}
+			
+		}.start();
 	}
 	
 	// Método para facilitar a obtenção do objeto remoto acceptor pelo nome
@@ -89,46 +104,65 @@ public class ProposerImpl implements Proposer {
 	@Override
 	public void prepare_response(Response response) throws RemoteException {
 		if (this.findResponse(response) == null) {
-			System.out.println(String.format("Received prepare_response from acceptor: %s", response.getAcceptorName()));
+			
+			Utils.printFormat("Received prepare_response from acceptor: %s", response.getAcceptorName());
 			
 			this.acceptedProposals.add(response);
 			
 			if (this.acceptedProposals.size() >= (this.acceptors.size() / 2) + 1) {
-				System.out.println("Received prepare_response from majority of acceptors. Sending accept...");
+				Utils.print("Received prepare_response from majority of acceptors. Sending accept...");
 				sendAccept();
 			}
 		} else {
-			System.out.println("Duplicated prepare_response received. Ignoring...");
+			Utils.print("Duplicated prepare_response received. Ignoring...");
 		}
 	}
 	
-	private void sendAccept() throws RemoteException {
+	private void sendAccept() {
 		
-		System.out.println("Finding the major proposal number from received prepare responses...");
-		Response response = this.acceptedProposals.get(0);
-		for	(Response r: this.acceptedProposals) {
-			if (r.getResponseProposalNumber() > response.getResponseProposalNumber()) {
-				response = r;
+		new Thread() {
+			
+			@Override
+		    public void run() {
+				
+				try {
+					
+					Utils.print("Finding the major proposal number from received prepare responses...");
+					
+					Response response = acceptedProposals.get(0);
+					for	(Response r: acceptedProposals) {
+						if (r.getResponseProposalNumber() > response.getResponseProposalNumber()) {
+							response = r;
+						}
+					}
+					
+					if (response.getResponseProposalNumber() == Integer.MIN_VALUE) {
+						Utils.print("No one proposal number found from prepare responses. Assuming original proposal...");
+						response.setResponseProposalNumber(proposal.getProposalNumber());
+						response.setValue(proposal.getValue());
+					} else {
+						Utils.print("The major proposal number was found.");
+					}
+					
+					Proposal proposalToAccept = new Proposal(proposerName,
+															 response.getResponseProposalNumber(),
+															 response.getValue());
+					
+					Utils.print("Sending accept_request to the acceptors.");
+					Utils.printFormat("Proposal number: %d", proposalToAccept.getProposalNumber());
+					Utils.printFormat("Value: %d", proposalToAccept.getValue());
+					
+					for	(String acceptorName: acceptors) {
+						getAcceptor(acceptorName).accept_request(proposalToAccept);
+					}
+					
+				} catch (RemoteException e) {
+					Utils.print("Failed to send accept to the acceptors!");
+					e.printStackTrace();
+				}
 			}
-		}
-		
-		if (response.getResponseProposalNumber() == Integer.MIN_VALUE) {
-			System.out.println("No one proposal number found from prepare responses. Assuming original proposal...");
-			response.setResponseProposalNumber(this.proposal.getProposalNumber());
-			response.setValue(this.proposal.getValue());
-		}
-		
-		Proposal proposalToAccept = new Proposal(this.proposerName,
-												 response.getResponseProposalNumber(),
-												 response.getValue());
-		
-		System.out.println("Sending accept_request to the acceptors.");
-		System.out.println(String.format("Proposal number: %d", proposalToAccept.getProposalNumber()));
-		System.out.println(String.format("Value: %d", proposalToAccept.getValue()));
-		
-		for	(String acceptorName: acceptors) {
-			getAcceptor(acceptorName).accept_request(proposalToAccept);
-		}
+			
+		}.start();
 	}
 	
 	// Inicialização do objeto remoto
@@ -147,22 +181,32 @@ public class ProposerImpl implements Proposer {
 			Proposer proposer = new ProposerImpl(proposerName, docConfigFile);
 			Utils.bindObject(proposer, proposerName);
 			
-			System.out.println(proposerName + " bound");
+			Utils.print(proposerName + " bound");
 		} catch (Exception e) {
-			System.err.println(proposerName + " exception:");
+			Utils.print(proposerName + " exception:");
 			e.printStackTrace();
 		}
 	}
 
 	@Override
 	public void learned(LearnedValue learnedValue) throws RemoteException {
-		try {
-			Client client = (Client) Utils.getRemoteObject(this.clientName);
-			client.receive_result(learnedValue.getValue());
-		} catch (NotBoundException e) {
-			e.printStackTrace();
-			throw new RemoteException("Cloud not find the client: " + this.clientName, e);
-		}
+		Utils.printFormat("Learned value received. Value: %d", learnedValue.getValue());
+		
+		new Thread() {
+			
+			@Override
+		    public void run() {
+				try {
+					Utils.printFormat("Sending to the client: %s...", clientName);
+					Client client = (Client) Utils.getRemoteObject(clientName);
+					client.receive_result(proposerName, learnedValue.getValue());
+				} catch (Exception e) {
+					Utils.printFormat("Could not send the value to the client %s!", clientName);
+					e.printStackTrace();
+				}
+			}
+			
+		}.start();
 	}
 
 }

@@ -1,12 +1,10 @@
 package learner;
 
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 
 import common.AcceptedProposal;
 import common.LearnedValue;
@@ -48,7 +46,7 @@ public class LearnerImpl implements Learner {
 	@Override
 	public void accepted(AcceptedProposal acceptedProposal) throws RemoteException {
 		if (findAcceptedProposal(acceptedProposal) == null) {
-			System.out.println(String.format("Received accept from acceptor: %s", acceptedProposal.getAcceptorName()));
+			Utils.print(String.format("Received accept from acceptor: %s", acceptedProposal.getAcceptorName()));
 			
 			this.acceptedProposals.add(acceptedProposal);
 			
@@ -57,7 +55,7 @@ public class LearnerImpl implements Learner {
 				sendLearnedValue(learnedValue);
 			}
 		} else {
-			System.out.println("Duplicated accepted received. Ignoring...");
+			Utils.print("Duplicated accepted received. Ignoring...");
 		}
 	}
 	
@@ -87,18 +85,27 @@ public class LearnerImpl implements Learner {
 
 	private void sendLearnedValue(LearnedValue learnedValue) throws java.rmi.RemoteException {
 		
-		System.out.println("Received a value from a majority of the acceptors. Send learned value to the proposers...");
-		System.out.println(String.format("Learned value: %d", learnedValue.getValue()));
-		
-		for (String proposerName: this.proposers) {
-			try {
-				Proposer proposer = (Proposer) Utils.getRemoteObject(proposerName);
-				proposer.learned(learnedValue);
-			} catch (NotBoundException e) {
-				e.printStackTrace();
-				throw new RemoteException("Could not find the proposer: " + proposerName, e);
+		new Thread() {
+			
+			@Override
+		    public void run() {
+				
+				Utils.print("Received a value from a majority of the acceptors. Send learned value to the proposers...");
+				Utils.printFormat("Learned value: %d", learnedValue.getValue());
+				
+				try {
+					for (String proposerName: proposers) {
+						Proposer proposer = (Proposer) Utils.getRemoteObject(proposerName);
+						proposer.learned(learnedValue);
+					}
+				} catch (Exception e) {
+					Utils.print("Failed to send the learned value to the proposers!");
+					e.printStackTrace();
+				}
+				
 			}
-		}
+			
+		}.start();
 		
 	}
 	
@@ -114,9 +121,9 @@ public class LearnerImpl implements Learner {
 			Learner learner = new LearnerImpl(learnerName, docConfigFile);
 			Utils.bindObject(learner, learnerName);
 			
-			System.out.println(learnerName + " bound");
+			Utils.print(learnerName + " bound");
 		} catch (Exception e) {
-			System.err.println(learnerName + " exception:");
+			Utils.print(learnerName + " exception:");
 			e.printStackTrace();
 		}
 	}
