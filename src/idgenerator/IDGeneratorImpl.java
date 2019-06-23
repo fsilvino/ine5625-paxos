@@ -9,14 +9,13 @@ public class IDGeneratorImpl implements IDGenerator {
     private int currentId;
 
     protected IDGeneratorImpl() {
-        super();
         this.currentId = 0;
     }
 
     @Override
     public synchronized int proposal_number() throws RemoteException {
         int n = ++this.currentId; 
-        Utils.print("Proposal number served: " + n);
+        Utils.printFormat("Proposal number served: %d", n);
         return n;
     }
 
@@ -25,9 +24,9 @@ public class IDGeneratorImpl implements IDGenerator {
         try {
             IDGenerator generator = new IDGeneratorImpl();
             Utils.bindObject(generator, Constants.IDGENERATOR_NAME);
-            Utils.print("IDGenerator bound");
+            Utils.printFormat("%s bound", Constants.IDGENERATOR_NAME);
         } catch (Exception e) {
-            Utils.print("IDGenerator exception:");
+            Utils.printFormat("%s exception:", Constants.IDGENERATOR_NAME);
             e.printStackTrace();
         }
     }

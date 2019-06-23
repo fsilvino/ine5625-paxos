@@ -132,8 +132,8 @@ public class ProposerImpl implements Proposer {
             }
 
             Proposal proposalToAccept = new Proposal(proposerName,
-                    response.getResponseProposalNumber(),
-                    response.getValue());
+                                                     response.getResponseProposalNumber(),
+                                                     response.getValue());
 
             Utils.print("Sending accept_request to the acceptors.");
             Utils.printFormat("Proposal number: %d", proposalToAccept.getProposalNumber());
@@ -145,6 +145,22 @@ public class ProposerImpl implements Proposer {
 
         } catch (RemoteException e) {
             Utils.print("Failed to send accept to the acceptors!");
+            e.printStackTrace();
+        }
+
+    }
+    
+    @Override
+    public void learned(LearnedValue learnedValue) throws RemoteException {
+
+        Utils.printFormat("Learned value received. Value: %d", learnedValue.getValue());
+
+        try {
+            Utils.printFormat("Sending to the client: %s...", clientName);
+            Client client = (Client) Utils.getRemoteObject(clientName);
+            client.receive_result(proposerName, learnedValue.getValue());
+        } catch (Exception e) {
+            Utils.printFormat("Could not send the value to the client %s!", clientName);
             e.printStackTrace();
         }
 
@@ -171,22 +187,6 @@ public class ProposerImpl implements Proposer {
             Utils.print(proposerName + " exception:");
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void learned(LearnedValue learnedValue) throws RemoteException {
-
-        Utils.printFormat("Learned value received. Value: %d", learnedValue.getValue());
-
-        try {
-            Utils.printFormat("Sending to the client: %s...", clientName);
-            Client client = (Client) Utils.getRemoteObject(clientName);
-            client.receive_result(proposerName, learnedValue.getValue());
-        } catch (Exception e) {
-            Utils.printFormat("Could not send the value to the client %s!", clientName);
-            e.printStackTrace();
-        }
-
     }
 
 }
