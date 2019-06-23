@@ -95,29 +95,20 @@ public class AcceptorImpl implements Acceptor {
 
     private void forwardAcceptToLearners(Proposal proposal) throws RemoteException {
 
-        new Thread() {
+        Utils.print("Forwarding to the learners...");
 
-            @Override
-            public void run() {
+        AcceptedProposal acceptedProposal = new AcceptedProposal(acceptorName, proposal.getProposalNumber(), proposal.getValue());
 
-                Utils.print("Forwarding to the learners...");
-
-                AcceptedProposal acceptedProposal = new AcceptedProposal(acceptorName, proposal.getProposalNumber(), proposal.getValue());
-
-                try {
-                    for (String learnerName: learners) {
-                        Utils.print(String.format("Sending accept to the learner: %s...", learnerName));
-                        Learner learner = getLearner(learnerName);
-                        learner.accepted(acceptedProposal);
-                    }
-                } catch (RemoteException e) {
-                    Utils.print("Failed to forward accept to the learners!");
-                    e.printStackTrace();
-                }
-
+        try {
+            for (String learnerName: learners) {
+                Utils.print(String.format("Sending accept to the learner: %s...", learnerName));
+                Learner learner = getLearner(learnerName);
+                learner.accepted(acceptedProposal);
             }
-
-        }.start();
+        } catch (RemoteException e) {
+            Utils.print("Failed to forward accept to the learners!");
+            e.printStackTrace();
+        }
 
     }
 
